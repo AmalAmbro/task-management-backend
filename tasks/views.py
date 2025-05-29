@@ -4,6 +4,8 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 from .models import Task
@@ -24,17 +26,12 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['status', 'priority']
+    search_fields = ['title']
 
     def get_queryset(self):
         queryset = Task.objects.filter(user=self.request.user)
-        status_param = self.request.query_params.get('status')
-        priority_param = self.request.query_params.get('priority')
-
-        if status_param:
-            queryset = queryset.filter(status=status_param)
-        if priority_param:
-            queryset = queryset.filter(priority=priority_param)
-
         return queryset
 
     def perform_create(self, serializer):
